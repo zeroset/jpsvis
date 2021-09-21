@@ -33,20 +33,22 @@
 #ifndef TRAVISTO_H
 #define TRAVISTO_H
 
-
 #include "ui_mainwindow.h"
+
 #include <QMainWindow>
 #include <QSettings>
 #include <QSplitter>
-#include "myqtreeview.h"
 #include <QStandardItem>
 #include <QTreeWidget>
+#include <QLabel>
 
 #include <vector>
 
+#include "myqtreeview.h"
+#include "ApplicationState.h"
+
 class vtkWindowToImageFilter;
 class SyncData;
-class ThreadDataTransfer;
 class ThreadVisualisation;
 class QString;
 class QDomNode;
@@ -62,7 +64,6 @@ extern int extern_screen_contrast;
 extern bool extern_is_pause;
 extern bool extern_launch_recording;
 extern bool extern_recording_enable;
-extern bool extern_offline_mode;
 extern bool extern_shutdown_visual_thread;
 extern bool extern_fullscreen_enable;
 
@@ -86,32 +87,29 @@ public:
 
 
 public Q_SLOTS:
+    /// NEW SLOTS
+    
+    /// Open a trajectory file
+    /// @return file could be opened successfully
+    bool slotOpenFile();
 
+    /// Toggles replay of loaded data.
+    /// @param checked, this is true if the button is pressed otherwise false.
+    void slotToggleReplay(bool checked);
+
+    /// Resets frame index of currently active replay to zero
+    void slotRewindFramesToBegin();
+
+
+    /// OLD SLOTS
     /// display the help modus
     void slotHelpAbout();
+
     ///quit the program
     void slotExit();
 
-    /// load a file
-    bool slotLoadFile();
-
     /// output an Error
     void slotErrorOutput(QString err);
-
-    /// output a warning
-    //void slotWarningOutput(QString warning);
-
-    /// start the visualisation thread
-    /// the signal is emitted when the
-    /// data transfer thread the header and at least one data set
-    void slotStartVisualisationThread(QString data="",int numberOfAgents=1000,float frameRate=25);
-
-    /// shutdown the visualisation thread
-    void slotShutdownVisualisationThread(bool);
-
-    /// add a new dataset to the store.
-    /// note that at most three (3) datasets can be loaded for a visualisation round
-    bool slotAddDataSet();
 
     /// clear all previously added/loaded datasets
     void slotClearAllDataset();
@@ -124,15 +122,8 @@ public Q_SLOTS:
     void slotSetCameraPerspectiveToVirtualAgent();
 
     //controls visualisation
-    void slotStartPlaying();
-    void slotStopPlaying();
     void slotRecord();
-    void slotFullScreen(bool status);
     void slotReset();
-    void slotNetworkSettings();
-    // void slotToggleVisualisationMode();
-    void slotSetOfflineMode(bool status);
-    void slotSetOnlineMode(bool status);
     /// take a screenshot of the rendering window
     void slotTakeScreenShot();
 
@@ -141,20 +132,12 @@ public Q_SLOTS:
      void slotFrameNumber(unsigned long timems, unsigned long minFrame);
     void slotRunningTime(unsigned long timems);
     void slotRenderingTime(int fps);
-    void slotControlSequence(const char *);
 
     /// load a geometry file and display it
-    //void slotLoadGeometry( );
     void slotClearGeometry();
-    //void slotLoadParseShowGeometry(QString fileName);
-
-    /// load a geometry sent by the data transfer thread
-    //void slotLoadGeometryToThread(QString data);
-
 
     /// enable/disable the first pedestrian group
     void slotToggleFirstPedestrianGroup();
-
 
     /// show/hides trajectories (leaving a trail) only
     void slotShowTrajectoryOnly();
@@ -179,9 +162,6 @@ public Q_SLOTS:
     /// show pedestrians only without trail
     void slotShowPedestrianOnly();
 
-    /// update the playing speed
-    void slotUpdateSpeedSlider(int newValue);
-
     /// update the position slider
     void slotUpdateFrameSlider(int newValue);
     void slotFrameSliderPressed();
@@ -197,9 +177,6 @@ public Q_SLOTS:
 
     /// enable/disable the pedestrian Directions
     void slotShowDirections();
-
-    /// update the contrast
-    void slotUpdateContrastSlider(int newValue);
 
     /// set visualisation mode to 2D
     void slotToogle2D();
@@ -264,6 +241,13 @@ protected:
     void dropEvent(QDropEvent *event);
 
 private:
+    void startReplay();
+    void stopReplay();
+    void enablePlayerControls();
+    void disablePlayerControls();
+    void startRendering();
+    void stopRendering();
+
 
     /// load settings in the case the remember settings is checked.
     void loadAllSettings();
@@ -283,7 +267,6 @@ private:
     /// parse the geometry  Node and return a pointer to geometry object
     /// used in online mode only
     void parseGeometry(const QDomNode& geoNode);
-    void parseGeometry(const QString &geometryString);
 
     /**
      * parse a shape node and get the initials heights and colors of pedestrians.
@@ -315,13 +298,9 @@ private:
     /// wait for visualisation thread to terminate
     void waitForVisioThread();
 
-    /// wait for data transfer thread to terminate
-    void waitForDataThread();
-
-
-
 private:
     Ui::mainwindow ui;
+    ApplicationState _state{ApplicationState::NoData};
 
     bool isPlaying;
     bool isPaused;
@@ -329,12 +308,10 @@ private:
     int numberOfDatasetLoaded;
 
     Settings* travistoOptions;
-    ThreadDataTransfer* dataTransferThread;
     ThreadVisualisation* _visualisationThread;
     QLabel *labelCurrentAction;
     QLabel *labelFrameNumber;
     QLabel *labelRecording;
-    QLabel *labelMode;
     QSplitter _splitter;
     //QTreeWidget _geoStructure;
     MyQTreeView _geoStructure;

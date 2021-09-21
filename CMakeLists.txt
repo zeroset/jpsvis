@@ -1,8 +1,3 @@
-# Documentation: Some useful options:
-# -DCMAKE_CXX_COMPILER:STRING=clang++   -DCMAKE_C_COMPILER:STRING=clang .
-# -DCMAKE_BUILD_TYPE:STRING=Debug (default Release)
-# -DBUILD_TESTING=ON (default OFF)
-#--------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.16)
 project(jpsvis LANGUAGES CXX C VERSION 0.8.3)
 
@@ -19,7 +14,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_COLOR_MAKEFILE ON)
-
 include(helper_functions)
 check_prefix_path()
 enforce_build_type_is_set()
@@ -65,7 +59,7 @@ endif()
 # Qt
 find_package(
     Qt5 5.12
-    COMPONENTS Widgets Xml Core Gui Network
+    COMPONENTS Widgets Xml Core Gui
     REQUIRED
 )
 
@@ -96,7 +90,6 @@ target_link_libraries(jpsvis PUBLIC
         Qt5::Widgets
         Qt5::Xml
         Qt5::Core
-        Qt5::Network
         ${VTK_LIBRARIES}
         git-info
 )
@@ -140,10 +133,8 @@ set(SRCS
     src/Frame.cpp
     src/InteractorStyle.cpp
     src/Pedestrian.cpp
-    src/SimpleVisualisationWindow.cpp
     src/SyncData.cpp
     src/SystemSettings.cpp
-    src/ThreadDataTransfert.cpp
     src/ThreadVisualisation.cpp
     src/TimerCallback.cpp
     src/FrameElement.cpp
@@ -153,7 +144,6 @@ set(SRCS
     src/geometry/LinePlotter.cpp
     src/geometry/PointPlotter.cpp
     src/geometry/GeometryFactory.cpp
-    src/network/TraVisToServer.cpp
     src/MainWindow.cpp
     src/TrailPlotter.cpp
     src/myqtreeview.cpp
@@ -181,6 +171,7 @@ set(HDR
     src/IO/OutputHandler.h
     src/IO/TraVisToClient.h
     forms/Settings.h
+    src/ApplicationState.h
     src/SaxParser.h
     src/train.h
     src/Log.h
@@ -188,10 +179,8 @@ set(HDR
     src/InteractorStyle.h
     src/Message.h
     src/Pedestrian.h
-    src/SimpleVisualisationWindow.h
     src/SyncData.h
     src/SystemSettings.h
-    src/ThreadDataTransfert.h
     src/ThreadVisualisation.h
     src/TimerCallback.h
     src/FrameElement.h
@@ -201,19 +190,10 @@ set(HDR
     src/geometry/PointPlotter.h
     src/geometry/LinePlotter2D.h
     src/geometry/PointPlotter2D.h
-    src/network/TraVisToServer.h
     src/MainWindow.h
     src/TrailPlotter.h
     src/myqtreeview.h
 )
-
-IF(APPLE)
-    set(MAC_FIX_SRC src/fix/osx_thread_fix.mm) #.mm
-    set(MAC_FIX_HDR src/fix/osx_thread_fix.h) #.h
-
-    set(SRCS ${SRCS} ${MAC_FIX_SRC})
-    set(HDR ${HDR} ${MAC_FIX_HDR})
-ENDIF(APPLE)
 
 set(UIS
     forms/settings.ui
