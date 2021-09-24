@@ -32,141 +32,143 @@
  */
 
 
-#include <QThread>
-#include <QString>
-#include <QObject>
-#include <QMessageBox>
+#include "ThreadVisualisation.h"
 
-#include <vtkRenderer.h>
-#include <vtkCamera.h>
-#include <vtkAssembly.h>
-#include <vtkRenderWindow.h>
-#include <vtkRenderWindowInteractor.h>
-#include <vtkInteractorStyleTrackballCamera.h>
-#include <vtkAxisActor.h>
-#include <vtkAxesActor.h>
-#include <vtkTextActor.h>
-#include <vtkLight.h>
-#include <vtkScalarBarActor.h>
-#include <vtkFloatArray.h>
-#include <vtkPolyData.h>
-#include <vtkPolyDataMapper.h>
-#include <vtkLookupTable.h>
-#include <vtkTextProperty.h>
-#include <vtkProperty.h>
-#include <vtkOutputWindow.h>
-#include <vtkFileOutputWindow.h>
-#include <vtkCallbackCommand.h>
-#include <vtkSmartPointer.h>
-#include <vtkActor2DCollection.h>
-#include <vtkRegularPolygonSource.h>
-#include <vtkLabeledDataMapper.h>
-#include <vtkDiskSource.h>
-#include <vtkConeSource.h>
-#include <vtkTriangleFilter.h>
-#include <vtkStripper.h>
-#include <vtkSphereSource.h>
-#include <vtkCylinderSource.h>
-#include <vtkWindowToImageFilter.h>
-#include <vtkActor.h>
-#include <vtkLightKit.h>
-#include <vtkPolyLine.h>
-
+#include "Frame.h"
+#include "InteractorStyle.h"
+#include "Log.h"
+#include "Pedestrian.h"
+#include "SyncData.h"
+#include "SystemSettings.h"
+#include "TimerCallback.h"
+#include "TrajectoryPoint.h"
 #include "geometry/FacilityGeometry.h"
 #include "geometry/GeometryFactory.h"
 #include "geometry/LinePlotter2D.h"
-
-#include "ThreadVisualisation.h"
-#include "Pedestrian.h"
-#include "TimerCallback.h"
-#include "Frame.h"
-#include "TrajectoryPoint.h"
-#include "SyncData.h"
-#include "InteractorStyle.h"
-#include "SystemSettings.h"
 #include "geometry/PointPlotter.h"
-#include "Log.h"
+
+#include <QMessageBox>
+#include <QObject>
+#include <QString>
+#include <QThread>
+#include <vtkActor.h>
+#include <vtkActor2DCollection.h>
+#include <vtkAssembly.h>
+#include <vtkAxesActor.h>
+#include <vtkAxisActor.h>
+#include <vtkCallbackCommand.h>
+#include <vtkCamera.h>
+#include <vtkConeSource.h>
+#include <vtkCylinderSource.h>
+#include <vtkDiskSource.h>
+#include <vtkFileOutputWindow.h>
+#include <vtkFloatArray.h>
+#include <vtkInteractorStyleTrackballCamera.h>
+#include <vtkLabeledDataMapper.h>
+#include <vtkLight.h>
+#include <vtkLightKit.h>
+#include <vtkLookupTable.h>
+#include <vtkOutputWindow.h>
+#include <vtkPolyData.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkPolyLine.h>
+#include <vtkProperty.h>
+#include <vtkRegularPolygonSource.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkRenderer.h>
+#include <vtkScalarBarActor.h>
+#include <vtkSmartPointer.h>
+#include <vtkSphereSource.h>
+#include <vtkStripper.h>
+#include <vtkTextActor.h>
+#include <vtkTextProperty.h>
+#include <vtkTriangleFilter.h>
+#include <vtkWindowToImageFilter.h>
 
 
-#define VTK_CREATE(type, name) \
-    vtkSmartPointer<type> name = vtkSmartPointer<type>::New()
+#define VTK_CREATE(type, name) vtkSmartPointer<type> name = vtkSmartPointer<type>::New()
 
 
-ThreadVisualisation::ThreadVisualisation(QObject* parent, vtkRenderWindow* renderWindow):
+ThreadVisualisation::ThreadVisualisation(QObject * parent, vtkRenderWindow * renderWindow) :
     QObject(parent)
 {
     _renderWindow = renderWindow;
-    _renderer=NULL;
-    _runningTime=vtkTextActor::New();;
-    _framePerSecond=25;
-    _axis=NULL;
-    _winTitle="header without room caption";
+    _renderer     = NULL;
+    _runningTime  = vtkTextActor::New();
+    ;
+    _framePerSecond = 25;
+    _axis           = NULL;
+    _winTitle       = "header without room caption";
 }
 
 ThreadVisualisation::~ThreadVisualisation()
 {
-
     if(_axis)
         _axis->Delete();
 
-    if(extern_glyphs_pedestrians_3D) extern_glyphs_pedestrians_3D->Delete();
-    if(extern_glyphs_pedestrians_actor_3D) extern_glyphs_pedestrians_actor_3D->Delete();
-    if(extern_glyphs_pedestrians) extern_glyphs_pedestrians->Delete();
-    if(extern_glyphs_pedestrians_actor_2D) extern_glyphs_pedestrians_actor_2D->Delete();
-    if(extern_pedestrians_labels) extern_pedestrians_labels->Delete();
-    //show directions of movement
-    if(extern_glyphs_directions) extern_glyphs_directions->Delete();
-    if(extern_glyphs_directions_actor) extern_glyphs_directions_actor->Delete();
+    if(extern_glyphs_pedestrians_3D)
+        extern_glyphs_pedestrians_3D->Delete();
+    if(extern_glyphs_pedestrians_actor_3D)
+        extern_glyphs_pedestrians_actor_3D->Delete();
+    if(extern_glyphs_pedestrians)
+        extern_glyphs_pedestrians->Delete();
+    if(extern_glyphs_pedestrians_actor_2D)
+        extern_glyphs_pedestrians_actor_2D->Delete();
+    if(extern_pedestrians_labels)
+        extern_pedestrians_labels->Delete();
+    // show directions of movement
+    if(extern_glyphs_directions)
+        extern_glyphs_directions->Delete();
+    if(extern_glyphs_directions_actor)
+        extern_glyphs_directions_actor->Delete();
 
     _runningTime->Delete();
-
 }
 
-void ThreadVisualisation::setFullsreen(bool status)
-{
-}
+void ThreadVisualisation::setFullsreen(bool status) {}
 
 void ThreadVisualisation::slotSetFrameRate(float fps)
 {
-    _framePerSecond=fps;
+    _framePerSecond = fps;
 }
 
 
 void ThreadVisualisation::run()
 {
-    //deactivate the output windows
+    // deactivate the output windows
     vtkObject::GlobalWarningDisplayOff();
 
     // Create the renderer
     _renderer = vtkRenderer::New();
     // set the background
-    _renderer->SetBackground(1.0,1.0,1.0);
-    //add the geometry
+    _renderer->SetBackground(1.0, 1.0, 1.0);
+    // add the geometry
     _geometry.Init(_renderer);
 
     initGlyphs2D();
     initGlyphs3D();
 
-    //create the trails
+    // create the trails
     extern_trail_plotter = new PointPlotter();
     _renderer->AddActor(extern_trail_plotter->getActor());
 
     // Create the render window
-    _renderWindow->AddRenderer( _renderer );
+    _renderWindow->AddRenderer(_renderer);
 
-    //add the running time frame
+    // add the running time frame
     _runningTime->SetTextScaleModeToViewport();
     _runningTime->SetVisibility(SystemSettings::getOnScreenInfos());
 
     // set the properties of the caption
-    vtkTextProperty* tprop = _runningTime->GetTextProperty();
+    vtkTextProperty * tprop = _runningTime->GetTextProperty();
     tprop->SetFontSize(10);
-    tprop->SetColor(1.0,0.0,0.0);
+    tprop->SetColor(1.0, 0.0, 0.0);
 
     _renderer->AddActor2D(_runningTime);
 
     // Create an interactor
-    auto* interactor = _renderWindow->GetInteractor();
+    auto * interactor = _renderWindow->GetInteractor();
     interactor->SetInteractorStyle(&_interactorStyle);
 
     if(SystemSettings::get2D()) {
@@ -175,32 +177,38 @@ void ThreadVisualisation::run()
         _renderer->ResetCamera();
     }
 
-    //create a timer for rendering the window
+    // create a timer for rendering the window
     _timer_cb = std::make_unique<TimerCallback>();
-    _timer_id = interactor->CreateRepeatingTimer(1000.0/_framePerSecond);
+    _timer_id = interactor->CreateRepeatingTimer(1000.0 / _framePerSecond);
     _timer_cb->SetRenderTimerId(_timer_id);
     _timer_cb->setTextActor(_runningTime);
-    interactor->AddObserver(vtkCommand::TimerEvent,_timer_cb.get());
+    interactor->AddObserver(vtkCommand::TimerEvent, _timer_cb.get());
 
 
+    // create the necessary connections
+    QObject::connect(
+        _timer_cb.get(),
+        SIGNAL(signalRunningTime(unsigned long)),
+        this->parent(),
+        SLOT(slotRunningTime(unsigned long)));
 
+    QObject::connect(
+        _timer_cb.get(),
+        SIGNAL(signalFrameNumber(unsigned long, unsigned long)),
+        this->parent(),
+        SLOT(slotFrameNumber(unsigned long, unsigned long)));
 
+    QObject::connect(
+        _timer_cb.get(),
+        SIGNAL(signalRenderingTime(int)),
+        this->parent(),
+        SLOT(slotRenderingTime(int)));
 
-    //create the necessary connections
-    QObject::connect(_timer_cb.get(), SIGNAL(signalRunningTime(unsigned long )),
-                     this->parent(), SLOT(slotRunningTime(unsigned long )));
-
-    QObject::connect(_timer_cb.get(), SIGNAL(signalFrameNumber(unsigned long, unsigned long )),
-                     this->parent(), SLOT(slotFrameNumber(unsigned long, unsigned long )));
-
-    QObject::connect(_timer_cb.get(), SIGNAL(signalRenderingTime(int)),
-                     this->parent(), SLOT(slotRenderingTime(int)));
-
-    //save the top view  camera
-    _topViewCamera=vtkCamera::New();
+    // save the top view  camera
+    _topViewCamera = vtkCamera::New();
     _topViewCamera->DeepCopy(_renderer->GetActiveCamera());
 
-    //update all (restored) system settings
+    // update all (restored) system settings
     setGeometryVisibility2D(SystemSettings::get2D());
     setGeometryVisibility3D(!SystemSettings::get2D());
     setGeometryVisibility(SystemSettings::getShowGeometry());
@@ -217,35 +225,42 @@ void ThreadVisualisation::run()
     setFloorColor(SystemSettings::getFloorColor());
     setExitsColor(SystemSettings::getExitsColor());
     setNavLinesColor(SystemSettings::getNavLinesColor());
-    //FIXME:
+    // FIXME:
     showGradientField(SystemSettings::getShowGradientField());
     interactor->Start();
 
     emit signal_controlSequences("CONTROL_RESET");
 }
 
-void ThreadVisualisation::stop() {
-    QObject::disconnect(_timer_cb.get(), SIGNAL(signalRunningTime(unsigned long )),
-                     this->parent(), SLOT(slotRunningTime(unsigned long )));
+void ThreadVisualisation::stop()
+{
+    QObject::disconnect(
+        _timer_cb.get(),
+        SIGNAL(signalRunningTime(unsigned long)),
+        this->parent(),
+        SLOT(slotRunningTime(unsigned long)));
 
-    QObject::disconnect(_timer_cb.get(), SIGNAL(signalFrameNumber(unsigned long, unsigned long )),
-                     this->parent(), SLOT(slotFrameNumber(unsigned long, unsigned long )));
+    QObject::disconnect(
+        _timer_cb.get(),
+        SIGNAL(signalFrameNumber(unsigned long, unsigned long)),
+        this->parent(),
+        SLOT(slotFrameNumber(unsigned long, unsigned long)));
 
-    QObject::disconnect(_timer_cb.get(), SIGNAL(signalRenderingTime(int)),
-                     this->parent(), SLOT(slotRenderingTime(int)));
+    QObject::disconnect(
+        _timer_cb.get(),
+        SIGNAL(signalRenderingTime(int)),
+        this->parent(),
+        SLOT(slotRenderingTime(int)));
     _renderWindow->GetInteractor()->DestroyTimer(_timer_id);
     _renderWindow->GetInteractor()->RemoveAllObservers();
 }
 
-void ThreadVisualisation::setGeometryVisibility( bool status)
+void ThreadVisualisation::setGeometryVisibility(bool status)
 {
-
-    if(SystemSettings::get2D())
-    {
+    if(SystemSettings::get2D()) {
         _geometry.Set2D(status);
-    } else
-    {
-       _geometry.Set3D(status);
+    } else {
+        _geometry.Set3D(status);
     }
 }
 
@@ -279,28 +294,33 @@ void ThreadVisualisation::showGradientField(bool status)
 {
     _geometry.ShowGradientField(status);
 }
-void  ThreadVisualisation::initGlyphs2D()
+void ThreadVisualisation::initGlyphs2D()
 {
-    if(extern_glyphs_pedestrians) extern_glyphs_pedestrians->Delete();
-    if(extern_glyphs_pedestrians_actor_2D) extern_glyphs_pedestrians_actor_2D->Delete();
-    if(extern_pedestrians_labels) extern_pedestrians_labels->Delete();
-    //show directions of movement
-    if(extern_glyphs_directions) extern_glyphs_directions->Delete();
-    if(extern_glyphs_directions_actor) extern_glyphs_directions_actor->Delete();
+    if(extern_glyphs_pedestrians)
+        extern_glyphs_pedestrians->Delete();
+    if(extern_glyphs_pedestrians_actor_2D)
+        extern_glyphs_pedestrians_actor_2D->Delete();
+    if(extern_pedestrians_labels)
+        extern_pedestrians_labels->Delete();
+    // show directions of movement
+    if(extern_glyphs_directions)
+        extern_glyphs_directions->Delete();
+    if(extern_glyphs_directions_actor)
+        extern_glyphs_directions_actor->Delete();
 
-    extern_glyphs_pedestrians = vtkTensorGlyph::New();
+    extern_glyphs_pedestrians          = vtkTensorGlyph::New();
     extern_glyphs_pedestrians_actor_2D = vtkActor::New();
-    extern_pedestrians_labels =  vtkActor2D::New();
-    extern_glyphs_directions=vtkTensorGlyph::New();
-    extern_glyphs_directions_actor=vtkActor::New();
+    extern_pedestrians_labels          = vtkActor2D::New();
+    extern_glyphs_directions           = vtkTensorGlyph::New();
+    extern_glyphs_directions_actor     = vtkActor::New();
 
-    //now create the glyphs with ellipses
-    VTK_CREATE (vtkDiskSource, agentShape);
+    // now create the glyphs with ellipses
+    VTK_CREATE(vtkDiskSource, agentShape);
     agentShape->SetCircumferentialResolution(20);
     agentShape->SetInnerRadius(0);
     agentShape->SetOuterRadius(30);
 
-    //speed the rendering using triangles stripers
+    // speed the rendering using triangles stripers
     VTK_CREATE(vtkTriangleFilter, tris);
     tris->SetInputConnection(agentShape->GetOutputPort());
 
@@ -309,17 +329,20 @@ void  ThreadVisualisation::initGlyphs2D()
 
     extern_glyphs_pedestrians->SetSourceConnection(strip->GetOutputPort());
 
-    //first frame
-    auto&& frames=extern_trajectories_firstSet.GetFrames();
-    if(frames.empty()) return;
+    // first frame
+    auto && frames = extern_trajectories_firstSet.GetFrames();
+    if(frames.empty())
+        return;
 
-    Frame * frame = frames.begin()->second;
-    vtkPolyData* pData=NULL;
+    Frame * frame       = frames.begin()->second;
+    vtkPolyData * pData = NULL;
 
-    if(frame) pData=frame->GetPolyData2D();
-    
+    if(frame)
+        pData = frame->GetPolyData2D();
+
     extern_glyphs_pedestrians->SetInputConnection(agentShape->GetOutputPort());
-    if (frame) extern_glyphs_pedestrians->SetInputData(pData);
+    if(frame)
+        extern_glyphs_pedestrians->SetInputData(pData);
     extern_glyphs_pedestrians->ThreeGlyphsOff();
     extern_glyphs_pedestrians->ExtractEigenvaluesOff();
 
@@ -327,9 +350,9 @@ void  ThreadVisualisation::initGlyphs2D()
     mapper->SetInputConnection(extern_glyphs_pedestrians->GetOutputPort());
 
     VTK_CREATE(vtkLookupTable, lut);
-    lut->SetHueRange(0.0,0.470);
-    lut->SetValueRange(1.0,1.0);
-    lut->SetNanColor(0.2,0.2,0.2,0.5);
+    lut->SetHueRange(0.0, 0.470);
+    lut->SetValueRange(1.0, 1.0);
+    lut->SetNanColor(0.2, 0.2, 0.2, 0.5);
     lut->SetNumberOfTableValues(256);
     lut->Build();
     mapper->SetLookupTable(lut);
@@ -338,8 +361,8 @@ void  ThreadVisualisation::initGlyphs2D()
 
     _renderer->AddActor(extern_glyphs_pedestrians_actor_2D);
 
-    //Show directions
-    VTK_CREATE(vtkConeSource,agentDirection);
+    // Show directions
+    VTK_CREATE(vtkConeSource, agentDirection);
     agentDirection->SetHeight(40);
     agentDirection->SetRadius(15);
 
@@ -350,17 +373,18 @@ void  ThreadVisualisation::initGlyphs2D()
 
     extern_glyphs_directions->SetSourceConnection(strip2->GetOutputPort());
     extern_glyphs_directions->SetInputConnection(agentDirection->GetOutputPort());
-    if (frame) extern_glyphs_directions->SetInputData(pData);
+    if(frame)
+        extern_glyphs_directions->SetInputData(pData);
     extern_glyphs_directions->ThreeGlyphsOff();
     extern_glyphs_directions->ExtractEigenvaluesOff();
 
     VTK_CREATE(vtkPolyDataMapper, mapper2);
     mapper2->SetInputConnection(extern_glyphs_directions->GetOutputPort());
-    mapper2->ScalarVisibilityOff(); //to set color
+    mapper2->ScalarVisibilityOff(); // to set color
     mapper2->SetLookupTable(lut);
 
     extern_glyphs_directions_actor->SetMapper(mapper2);
-    extern_glyphs_directions_actor->GetProperty()->SetColor(0,0,0); //black
+    extern_glyphs_directions_actor->GetProperty()->SetColor(0, 0, 0); // black
     _renderer->AddActor2D(extern_glyphs_directions_actor);
 
     // structure for the labels
@@ -374,20 +398,21 @@ void  ThreadVisualisation::initGlyphs2D()
 
 void ThreadVisualisation::initGlyphs3D()
 {
+    if(extern_glyphs_pedestrians_3D)
+        extern_glyphs_pedestrians_3D->Delete();
+    if(extern_glyphs_pedestrians_actor_3D)
+        extern_glyphs_pedestrians_actor_3D->Delete();
 
-    if(extern_glyphs_pedestrians_3D) extern_glyphs_pedestrians_3D->Delete();
-    if(extern_glyphs_pedestrians_actor_3D) extern_glyphs_pedestrians_actor_3D->Delete();
-
-    extern_glyphs_pedestrians_3D = vtkTensorGlyph::New();
+    extern_glyphs_pedestrians_3D       = vtkTensorGlyph::New();
     extern_glyphs_pedestrians_actor_3D = vtkActor::New();
 
-    //now create the glyphs with zylinders
-    VTK_CREATE (vtkCylinderSource, agentShape);
+    // now create the glyphs with zylinders
+    VTK_CREATE(vtkCylinderSource, agentShape);
     agentShape->SetHeight(160);
     agentShape->SetRadius(20);
     agentShape->SetResolution(20);
 
-    //speed the rendering using triangles stripers
+    // speed the rendering using triangles stripers
     VTK_CREATE(vtkTriangleFilter, tris);
     tris->SetInputConnection(agentShape->GetOutputPort());
 
@@ -396,17 +421,20 @@ void ThreadVisualisation::initGlyphs3D()
 
     extern_glyphs_pedestrians_3D->SetSourceConnection(strip->GetOutputPort());
 
-    //first frame
-    auto&& frames=extern_trajectories_firstSet.GetFrames();
-    if(frames.empty()) return;
+    // first frame
+    auto && frames = extern_trajectories_firstSet.GetFrames();
+    if(frames.empty())
+        return;
 
     Frame * frame = frames.begin()->second;
 
-    vtkPolyData* pData=NULL;
-    if(frame) pData=frame->GetPolyData2D();
+    vtkPolyData * pData = NULL;
+    if(frame)
+        pData = frame->GetPolyData2D();
 
     extern_glyphs_pedestrians_3D->SetInputConnection(strip->GetOutputPort());
-    if (frame )extern_glyphs_pedestrians_3D->SetInputData(pData);
+    if(frame)
+        extern_glyphs_pedestrians_3D->SetInputData(pData);
 
     extern_glyphs_pedestrians_3D->ThreeGlyphsOff();
     extern_glyphs_pedestrians_3D->ExtractEigenvaluesOff();
@@ -415,9 +443,9 @@ void ThreadVisualisation::initGlyphs3D()
     mapper->SetInputConnection(extern_glyphs_pedestrians_3D->GetOutputPort());
 
     VTK_CREATE(vtkLookupTable, lut);
-    lut->SetHueRange(0.0,0.470);
-    lut->SetValueRange(1.0,1.0);
-    lut->SetNanColor(0.2,0.2,0.2,0.5);
+    lut->SetHueRange(0.0, 0.470);
+    lut->SetValueRange(1.0, 1.0);
+    lut->SetNanColor(0.2, 0.2, 0.2, 0.5);
     lut->SetNumberOfTableValues(256);
     lut->Build();
     mapper->SetLookupTable(lut);
@@ -429,42 +457,37 @@ void ThreadVisualisation::initGlyphs3D()
     extern_glyphs_pedestrians_actor_3D->SetVisibility(false);
 }
 
-void  ThreadVisualisation::init()
-{
-}
+void ThreadVisualisation::init() {}
 
-void ThreadVisualisation::finalize()
-{
+void ThreadVisualisation::finalize() {}
 
-}
-
-void ThreadVisualisation::QcolorToDouble(const QColor &col, double *rgb)
+void ThreadVisualisation::QcolorToDouble(const QColor & col, double * rgb)
 {
-    rgb[0]=(double)col.red()/255.0;
-    rgb[1]=(double)col.green()/255.0;
-    rgb[2]=(double)col.blue()/255.0;
+    rgb[0] = (double) col.red() / 255.0;
+    rgb[1] = (double) col.green() / 255.0;
+    rgb[2] = (double) col.blue() / 255.0;
 }
 
 void ThreadVisualisation::initLegend(/*std::vector scalars*/)
 {
-    //lookup table
-    vtkLookupTable* lut =  vtkLookupTable::New();
-    lut->SetHueRange(0.0,0.566);
+    // lookup table
+    vtkLookupTable * lut = vtkLookupTable::New();
+    lut->SetHueRange(0.0, 0.566);
     lut->SetTableRange(20.0, 50.0);
     lut->SetNumberOfTableValues(50);
     lut->Build();
 
-    vtkTextProperty* titleProp = vtkTextProperty::New();
+    vtkTextProperty * titleProp = vtkTextProperty::New();
     titleProp->SetFontSize(14);
 
-    vtkTextProperty* labelProp = vtkTextProperty::New();
+    vtkTextProperty * labelProp = vtkTextProperty::New();
     labelProp->SetFontSize(10);
 
-    vtkScalarBarActor* scalarBar = vtkScalarBarActor::New();
+    vtkScalarBarActor * scalarBar = vtkScalarBarActor::New();
     scalarBar->SetLookupTable(lut);
     scalarBar->SetTitle("Velocities ( cm/s )");
     scalarBar->SetTitleTextProperty(titleProp);
-    scalarBar->SetLabelTextProperty (labelProp);
+    scalarBar->SetLabelTextProperty(labelProp);
     scalarBar->GetPositionCoordinate()->SetCoordinateSystemToNormalizedViewport();
     scalarBar->GetPositionCoordinate()->SetValue(0.005, 0.90075);
     scalarBar->SetOrientationToVertical();
@@ -474,7 +497,6 @@ void ThreadVisualisation::initLegend(/*std::vector scalars*/)
     scalarBar->SetHeight(0.10);
     _renderer->AddActor2D(scalarBar);
     _renderer->Render();
-
 }
 
 
@@ -483,83 +505,84 @@ void ThreadVisualisation::setAxisVisible(bool status)
     _axis->SetVisibility(status);
 }
 
-void ThreadVisualisation::setCameraPerspective(int mode,int degree)
+void ThreadVisualisation::setCameraPerspective(int mode, int degree)
 {
-    if(_renderer==NULL) return;
+    if(_renderer == NULL)
+        return;
 
-    switch (mode) {
-    case 1: //TOP oder RESET
-        _renderer->GetActiveCamera()->DeepCopy(_topViewCamera);
-        break;
-    case 2://TOP Rotate [range:-180-->180]
-        _topViewCamera->Roll(degree);
-        _renderer->GetActiveCamera()->DeepCopy(_topViewCamera);
-        _topViewCamera->Roll(-degree);
-        break;
-    case 3://Side Rotate [range:-80-->80]
-        _topViewCamera->Elevation(-degree);
-        _renderer->GetActiveCamera()->DeepCopy(_topViewCamera);
-        _topViewCamera->Elevation(degree);
-        break;
-    case 4: { // agent virtual reality
-        //vtkCamera *camera = renderer->GetActiveCamera();
-        //camera->SetRoll(-90);
-        //std::cout <<"roll       [ "<< camera->GetRoll()<<" ]"<<std::endl;
-        //double roll=camera->GetRoll();
-        //camera->Roll(-90-camera->GetRoll());
-        //camera->Modified();
-    }
+    switch(mode) {
+        case 1: // TOP oder RESET
+            _renderer->GetActiveCamera()->DeepCopy(_topViewCamera);
+            break;
+        case 2: // TOP Rotate [range:-180-->180]
+            _topViewCamera->Roll(degree);
+            _renderer->GetActiveCamera()->DeepCopy(_topViewCamera);
+            _topViewCamera->Roll(-degree);
+            break;
+        case 3: // Side Rotate [range:-80-->80]
+            _topViewCamera->Elevation(-degree);
+            _renderer->GetActiveCamera()->DeepCopy(_topViewCamera);
+            _topViewCamera->Elevation(degree);
+            break;
+        case 4: { // agent virtual reality
+            // vtkCamera *camera = renderer->GetActiveCamera();
+            // camera->SetRoll(-90);
+            // std::cout <<"roll       [ "<< camera->GetRoll()<<" ]"<<std::endl;
+            // double roll=camera->GetRoll();
+            // camera->Roll(-90-camera->GetRoll());
+            // camera->Modified();
+        }
 
         break;
     }
     _renderer->ResetCamera();
-
 }
 
-void ThreadVisualisation::setBackgroundColor(const QColor& col)
+void ThreadVisualisation::setBackgroundColor(const QColor & col)
 {
-    double  bgcolor[3];
-    QcolorToDouble(col,bgcolor);
-    if (_renderer!=NULL)
+    double bgcolor[3];
+    QcolorToDouble(col, bgcolor);
+    if(_renderer != NULL)
         _renderer->SetBackground(bgcolor);
 }
 
 void ThreadVisualisation::setWindowTitle(QString title)
 {
-    if(title.isEmpty())return;
-    _winTitle=title;
+    if(title.isEmpty())
+        return;
+    _winTitle = title;
 }
 
 /// @todo check this construct
-void ThreadVisualisation::setGeometry(FacilityGeometry* geometry)
+void ThreadVisualisation::setGeometry(FacilityGeometry * geometry)
 {
-    cout<<"dont call me"<<endl;
+    cout << "dont call me" << endl;
     exit(0);
 }
 
-GeometryFactory &ThreadVisualisation::getGeometry()
+GeometryFactory & ThreadVisualisation::getGeometry()
 {
     return _geometry;
 }
 
-void ThreadVisualisation::setWallsColor(const QColor &color)
+void ThreadVisualisation::setWallsColor(const QColor & color)
 {
-    double  rbgColor[3];
-    QcolorToDouble(color,rbgColor);
+    double rbgColor[3];
+    QcolorToDouble(color, rbgColor);
     _geometry.ChangeWallsColor(rbgColor);
 }
 
-void ThreadVisualisation::setFloorColor(const QColor &color)
+void ThreadVisualisation::setFloorColor(const QColor & color)
 {
-    double  rbgColor[3];
-    QcolorToDouble(color,rbgColor);
+    double rbgColor[3];
+    QcolorToDouble(color, rbgColor);
     _geometry.ChangeFloorColor(rbgColor);
 }
 
-void ThreadVisualisation::setObstacleColor(const QColor &color)
+void ThreadVisualisation::setObstacleColor(const QColor & color)
 {
-    double  rbgColor[3];
-    QcolorToDouble(color,rbgColor);
+    double rbgColor[3];
+    QcolorToDouble(color, rbgColor);
     _geometry.ChangeObstaclesColor(rbgColor);
 }
 
@@ -568,18 +591,18 @@ void ThreadVisualisation::setGeometryLabelsVisibility(int v)
     _geometry.ShowGeometryLabels(v);
 }
 
-void ThreadVisualisation::setExitsColor(const QColor &color)
+void ThreadVisualisation::setExitsColor(const QColor & color)
 {
-    double  rbgColor[3];
-    QcolorToDouble(color,rbgColor);
-// HH
+    double rbgColor[3];
+    QcolorToDouble(color, rbgColor);
+    // HH
     _geometry.ChangeExitsColor(rbgColor);
 }
 
-void ThreadVisualisation::setNavLinesColor(const QColor &color)
+void ThreadVisualisation::setNavLinesColor(const QColor & color)
 {
-    double  rbgColor[3];
-    QcolorToDouble(color,rbgColor);
+    double rbgColor[3];
+    QcolorToDouble(color, rbgColor);
     _geometry.ChangeNavLinesColor(rbgColor);
 }
 
@@ -602,7 +625,4 @@ void ThreadVisualisation::setOnscreenInformationVisibility(bool show)
     _runningTime->SetVisibility(show);
 }
 
-void ThreadVisualisation::Create2dAgent()
-{
-
-}
+void ThreadVisualisation::Create2dAgent() {}

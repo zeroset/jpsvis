@@ -4,4 +4,3 @@
 void InitMultiThreading();
 
 #endif // OSX_THREAD_FIX_H
-
