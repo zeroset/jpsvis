@@ -375,16 +375,6 @@ void MainWindow::stopRendering() {
 //////////////////////////////////////////////////////////////////////////////
 // Old Code
 //////////////////////////////////////////////////////////////////////////////
-void MainWindow::slotFramesByFramesNavigation() {
-    if (ui.actionFrames_Navigation->isChecked()) {
-        ui.BtNextFrame->setVisible(true);
-        ui.BtPreviousFrame->setVisible(true);
-    } else {
-        ui.BtNextFrame->setVisible(false);
-        ui.BtPreviousFrame->setVisible(false);
-    }
-}
-
 void MainWindow::slotHelpAbout() {
     Log::Info("About JPSvis");
     QString gittext =
@@ -892,29 +882,10 @@ void MainWindow::cleanUp() {
 }
 
 void MainWindow::resetGraphicalElements() {
-    // restore play button
-    QIcon icon1;
-    icon1.addPixmap(
-        QPixmap(QString::fromUtf8(":/new/iconsS/icons/Play1Hot.png")),
-        QIcon::Normal, QIcon::Off);
-    ui.BtStart->setIcon(icon1);
-
-    // disable record button
     ui.BtRecord->setEnabled(false);
-
-    // disable stop button
-
-    // reset the slider
     ui.framesIndicatorSlider->setValue(ui.framesIndicatorSlider->minimum());
-
-    // bla bla
     ui.actionShow_Legend->setEnabled(true);
-
-    // restore the play Icon
-
-    //
     ui.actionShow_Trajectories->setEnabled(true);
-
     ui.action3_D->setEnabled(true);
     ui.action2_D->setEnabled(true);
 

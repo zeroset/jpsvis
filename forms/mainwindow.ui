@@ -72,12 +72,6 @@
         <verstretch>10</verstretch>
        </sizepolicy>
       </property>
-      <property name="minimumSize">
-       <size>
-        <width>1024</width>
-        <height>768</height>
-       </size>
-      </property>
      </widget>
     </item>
     <item>
@@ -140,9 +134,6 @@
           </property>
           <property name="checkable">
            <bool>true</bool>
-          </property>
-          <property name="flat">
-           <bool>false</bool>
           </property>
          </widget>
         </item>
@@ -215,13 +206,13 @@
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
+       <layout class="QHBoxLayout" name="horizontalLayout" stretch="19,1">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetFixedSize</enum>
+        </property>
         <item>
          <widget class="QSlider" name="framesIndicatorSlider">
           <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="mouseTracking">
            <bool>true</bool>
           </property>
           <property name="maximum">
@@ -246,12 +237,6 @@
         </item>
         <item>
          <widget class="QLabel" name="time">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
           <property name="text">
            <string>Frame / Elapsed Time</string>
           </property>
@@ -280,11 +265,9 @@
      <string>File</string>
     </property>
     <addaction name="actionOpenFile"/>
-    <addaction name="separator"/>
     <addaction name="actionLoad_Geometry"/>
     <addaction name="actionClear_Geometry"/>
     <addaction name="actionClear_Trajectories_Files"/>
-    <addaction name="separator"/>
     <addaction name="actionOpen"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
@@ -293,15 +276,11 @@
     <property name="title">
      <string>Visualisation</string>
     </property>
-    <addaction name="separator"/>
     <addaction name="actionReset"/>
     <addaction name="actionStart"/>
     <addaction name="actionRecord"/>
     <addaction name="actionStop"/>
     <addaction name="actionPause_Resume"/>
-    <addaction name="actionFullscreen"/>
-    <addaction name="separator"/>
-    <addaction name="actionFrames_Navigation"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -458,20 +437,6 @@
    </property>
    <property name="text">
     <string>Tutorial</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
-   </property>
-  </action>
-  <action name="actionFullscreen">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Fullscreen</string>
-   </property>
-   <property name="shortcut">
-    <string>F</string>
    </property>
    <property name="visible">
     <bool>false</bool>
@@ -1217,22 +1182,6 @@
    </hints>
   </connection>
   <connection>
-   <sender>actionFrames_Navigation</sender>
-   <signal>changed()</signal>
-   <receiver>mainwindow</receiver>
-   <slot>slotFramesByFramesNavigation()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>224</x>
-     <y>199</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>actionShow_Captions</sender>
    <signal>changed()</signal>
    <receiver>mainwindow</receiver>
@@ -1806,7 +1755,6 @@
   <slot>slotFrameSliderReleased()</slot>
   <slot>slotFrameSliderChanged()</slot>
   <slot>slotToogleShowLegend()</slot>
-  <slot>slotFramesByFramesNavigation()</slot>
   <slot>slotNextFrame()</slot>
   <slot>slotPreviousFrame()</slot>
   <slot>slotShowPedestrianCaption()</slot>

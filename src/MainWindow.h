@@ -168,7 +168,6 @@ public Q_SLOTS:
     void slotFrameSliderReleased();
 
     /// handle the frame by frame navigation
-    void slotFramesByFramesNavigation();
     void slotNextFrame();
     void slotPreviousFrame();
 
