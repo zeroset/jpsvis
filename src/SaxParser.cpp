@@ -148,7 +148,6 @@ bool SaxParser::startElement(
         }
     } else if(qName == "source") {
         double xmin, xmax, ymin, ymax;
-        double z = 0; // @todo read this some when we go 3D
 
         string source_id = "";
         for(int i = 0; i < at.length(); i++) {
@@ -165,7 +164,6 @@ bool SaxParser::startElement(
             }
         }
         _geometry->addRectangle(xmin, ymin, xmax, ymax, 0, 120.0, 150.0, source_id);
-        //@todo: here z=0. What about sources in the 2 floor?
     }
 
     else if(qName == "goal") {
@@ -1307,20 +1305,6 @@ bool SaxParser::getSourcesTXT(QString & filename)
     if(!xSourceF) {
         Log::Error("No agents_sources tag in file not found.");
         return false;
-    }
-    Log::Info("Loading sources from file");
-    TiXmlNode * xSourceNodeF = xSourceF->FirstChild("source");
-    if(xSourceNodeF) {
-        for(TiXmlElement * e = xSourceF->FirstChildElement("source"); e;
-            e                = e->NextSiblingElement("source")) {
-            float xmin    = xmltof(e->Attribute("x_min"), 0);
-            float xmax    = xmltof(e->Attribute("x_max"), 0);
-            float ymin    = xmltof(e->Attribute("y_min"), 0);
-            float ymax    = xmltof(e->Attribute("y_max"), 0);
-            bool dont_add = (xmin == 0) && (xmax == 0) && (ymin == 0) && (ymax == 0);
-            // if(! dont_add)
-            // _geometry->addSource(xmin,ymin,xmax,ymax);
-        } // for
     }
     return true;
 }
