@@ -92,6 +92,7 @@ target_link_libraries(jpsvis PUBLIC
         Qt5::Core
         ${VTK_LIBRARIES}
         git-info
+        tinyxml
 )
 
 # vtk_module_autoinit is needed
@@ -105,6 +106,19 @@ endif()
 #**************************************************************
 # SOURCES                                                     *
 #**************************************************************
+add_library(tinyxml STATIC
+    src/tinyxml/tinystr.cpp
+    src/tinyxml/tinystr.h
+    src/tinyxml/tinyxml.cpp
+    src/tinyxml/tinyxml.h
+    src/tinyxml/tinyxmlerror.cpp
+    src/tinyxml/tinyxmlparser.cpp
+)
+
+target_include_directories(tinyxml PUBLIC
+    src/tinyxml
+)
+
 target_include_directories(jpsvis PUBLIC "${CMAKE_SOURCE_DIR}/src" "${CMAKE_SOURCE_DIR}/forms" ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 set(SRCS
     src/geometry/Building.cpp
@@ -120,10 +134,6 @@ set(SRCS
     src/geometry/Transition.cpp
     src/geometry/Wall.cpp
     src/geometry/JPoint.cpp
-    src/tinyxml/tinystr.cpp
-    src/tinyxml/tinyxml.cpp
-    src/tinyxml/tinyxmlerror.cpp
-    src/tinyxml/tinyxmlparser.cpp
     src/IO/OutputHandler.cpp
     src/IO/TraVisToClient.cpp
     forms/Settings.cpp
@@ -165,8 +175,6 @@ set(HDR
     src/geometry/Wall.h
     src/geometry/JPoint.h
     src/geometry/GeometryFactory.h
-    src/tinyxml/tinystr.h
-    src/tinyxml/tinyxml.h
     src/general/Macros.h
     src/IO/OutputHandler.h
     src/IO/TraVisToClient.h
