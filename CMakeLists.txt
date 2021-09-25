@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 3.16)
 project(jpsvis LANGUAGES CXX C VERSION 0.8.3)
 
 ################################################################################
+# Project options
+################################################################################
+set(MORE_WARNINGS OFF CACHE BOOL
+    "Increase warning level to include not yet addressed issues"
+)
+
+################################################################################
 # Project setup
 ################################################################################
 set(CMAKE_CXX_STANDARD 17)
@@ -18,6 +25,7 @@ include(helper_functions)
 check_prefix_path()
 enforce_build_type_is_set()
 
+
 ################################################################################
 # Compilation flags
 ################################################################################
@@ -30,17 +38,20 @@ enforce_build_type_is_set()
 #          CMake will enclose multiple flags in '' which the compiler then
 #          treats as a single flag and does not understand.
 list(APPEND COMMON_COMPILE_OPTIONS
-    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-Wall>
-    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-Wextra>
-    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-Wconversion>
-    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-Wimplicit-fallthrough>
-    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-Wsign-conversion>
+    $<$<AND:$<BOOL:${MORE_WARNINGS}>,$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>>:-Wall>
+    $<$<AND:$<BOOL:${MORE_WARNINGS}>,$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>>:-Wextra>
+    $<$<AND:$<BOOL:${MORE_WARNINGS}>,$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>>:-Wconversion>
+    $<$<AND:$<BOOL:${MORE_WARNINGS}>,$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>>:-Wsign-conversion>
     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-fdiagnostics-color=always>
-    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-Wpedantic>
-    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-Wno-gnu-zero-variadic-macro-arguments>
-    $<$<CXX_COMPILER_ID:MSVC>:/W4>
+    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-Wimplicit-fallthrough>
+    #$<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-Wpedantic>
+    #$<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-Wno-gnu-zero-variadic-macro-arguments>
+    $<$<AND:$<BOOL:${MORE_WARNINGS}>,$<CXX_COMPILER_ID:MSVC>>:/W4>
+    $<$<AND:$<NOT:$<BOOL:${MORE_WARNINGS}>>,$<CXX_COMPILER_ID:MSVC>>:/W2>
     $<$<CXX_COMPILER_ID:MSVC>:/EHsc>
 )
+
+
 
 message( STATUS "System ........................................ ${CMAKE_SYSTEM_NAME} (${CMAKE_SYSTEM_VERSION}, ${CMAKE_SYSTEM_PROCESSOR})" )
 message( STATUS "Generating  ................................... ${PROJECT_NAME} (${PROJECT_VERSION})")
