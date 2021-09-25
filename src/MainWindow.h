@@ -256,16 +256,6 @@ private:
     /// performs the necessary cleaning before shutting down the program.
     void cleanUp();
 
-    /// reset the system to the very initial state
-    // void reset();
-
-    /// get the value of the tag <tagName> from a QDomNode
-    QString getTagValueFromElement(QDomNode node, const char * tagName);
-
-    /// parse the geometry  Node and return a pointer to geometry object
-    /// used in online mode only
-    void parseGeometry(const QDomNode & geoNode);
-
     /**
      * parse a shape node and get the initials heights and colors of pedestrians.
      *

@@ -60,8 +60,7 @@
 #include <QTemporaryFile>
 #include <QThread>
 #include <QTime>
-#include <QtXml/QDomDocument>
-#include <QtXml>
+#include <QMimeData>
 #include <iostream>
 #include <limits>
 #include <sstream>
@@ -428,46 +427,6 @@ void MainWindow::slotHelpAbout()
     msg.exec();
 }
 
-
-// This function is only used in online Mode
-void MainWindow::parseGeometry(const QDomNode & geoNode)
-{
-    Log::Info("parsing the geo");
-    if(geoNode.isNull())
-        return;
-
-    // check if there is a tag 'file' there in
-    QString fileName =
-        geoNode.toElement().elementsByTagName("file").item(0).toElement().attribute("location");
-    auto && geometry = _visualisationThread->getGeometry();
-
-    if(!fileName.isEmpty()) {
-        if(fileName.endsWith(".xml", Qt::CaseInsensitive)) {
-            // parsing the file
-            SaxParser::parseGeometryJPS(fileName, geometry);
-        } else if(fileName.endsWith(".trav", Qt::CaseInsensitive)) {
-            // must not be a file name
-            SaxParser::parseGeometryTRAV(fileName, geometry);
-        }
-    }
-    // I assume it is a trav format node,
-    // which is the only one which can directly be inserted into a file
-    else {
-        QDomDocument doc("");
-        QDomNode geoNode;
-        if(!geoNode.isNull()) {
-            Log::Error(
-                "online geo: %s",
-                geoNode.toElement().toDocument().toString().toStdString().c_str());
-            exit(EXIT_FAILURE);
-        }
-
-        // must not be a file name
-        SaxParser::parseGeometryTRAV(fileName, geometry, geoNode);
-    }
-    // return geometry;
-}
-
 /// clear all datasets previously entered.
 void MainWindow::slotClearAllDataset()
 {
@@ -576,16 +535,6 @@ bool MainWindow::addPedestrianGroup(int groupID, QString fileName)
             // everything was fine. Delete the log file
             SystemSettings::DeleteLogfile();
         }
-
-        // SaxParser::parseGeometryXMLV04(fileName,geometry);
-        // slotLoadParseShowGeometry(fileName);
-        // return false;
-    }
-
-    // check if it is vtrk file containinf gradient
-    if(fileName.endsWith(".vtk", Qt::CaseInsensitive)) {
-        if(false == SaxParser::ParseGradientFieldVTK(fileName, geometry))
-            return false;
     }
 
     QFile file(fileName);
@@ -623,25 +572,7 @@ bool MainWindow::addPedestrianGroup(int groupID, QString fileName)
     double frameRate = 16; // default frame rate
     statusBar()->showMessage(tr("parsing the file"));
 
-    // parsing the xml file
-    if(fileName.endsWith(".xml", Qt::CaseInsensitive)) {
-        QXmlInputSource source(&file);
-        QXmlSimpleReader reader;
-
-        SaxParser handler(geometry, *dataset, &frameRate);
-        reader.setContentHandler(&handler);
-        reader.parse(source);
-        file.close();
-    }
-    // parsing the vtk file
-    //    else if(fileName.endsWith(".vtk",Qt::CaseInsensitive))
-    //    {
-    //        if (false==SaxParser::ParseGradientFieldVTK(fileName,geometry))
-    //            return false;
-
-    //    }
-    // try to parse the txt file
-    else if(fileName.endsWith(".txt", Qt::CaseInsensitive)) {
+    if(fileName.endsWith(".txt", Qt::CaseInsensitive)) {
         QString source_file = wd + QDir::separator() + SaxParser::extractSourceFileTXT(fileName);
         QString ttt_file =
             wd + QDir::separator() + SaxParser::extractTrainTimeTableFileTXT(fileName);
@@ -684,27 +615,6 @@ bool MainWindow::addPedestrianGroup(int groupID, QString fileName)
             Log::Info(
                 "MainWindow::addPedestrianGroup: tt name: <%s>", tt_file.toStdString().c_str());
 
-        QXmlSimpleReader reader;
-        SaxParser handler(geometry, *dataset, &frameRate);
-        reader.setContentHandler(&handler);
-        // ------ parsing sources
-        if(readSource) {
-            QFile file(source_file);
-            QXmlInputSource source(&file);
-            reader.parse(source);
-            file.close();
-        }
-        // -----
-        // // ---- parsing goals
-        // -----
-        if(readGoal) {
-            QFile file2(goal_file);
-            QXmlInputSource source2(&file2);
-            reader.parse(source2);
-            file2.close();
-        }
-        // parsing trains
-        // train type
         std::map<int, std::shared_ptr<TrainTimeTable>> trainTimeTable;
         std::map<std::string, std::shared_ptr<TrainType>> trainTypes;
         if(readTrainTypes) {
@@ -793,13 +703,6 @@ void MainWindow::slotRecord()
     ui.BtRecord->setToolTip("Stop Recording");
     labelRecording->setText(" rec: on ");
     // labelCurrentAction->setText("   recording   ");
-}
-
-QString MainWindow::getTagValueFromElement(QDomNode node, const char * tagName)
-{
-    if(node.isNull())
-        return "";
-    return node.toElement().namedItem(tagName).firstChild().nodeValue();
 }
 
 void MainWindow::slotReset()
