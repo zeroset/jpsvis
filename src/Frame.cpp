@@ -87,95 +87,7 @@ FrameElement * Frame::getNextElement()
 
 void Frame::ComputePolyData()
 {
-    ComputePolyData2D();
     ComputePolyData3D();
-}
-
-void Frame::ComputePolyData2D()
-{
-    VTK_CREATE(vtkPoints, points);
-    VTK_CREATE(vtkFloatArray, colors);
-    VTK_CREATE(vtkFloatArray, tensors);
-    VTK_CREATE(vtkIntArray, labels);
-
-    colors->SetName("color");
-    colors->SetNumberOfComponents(1);
-
-    tensors->SetName("tensors");
-    tensors->SetNumberOfComponents(9);
-
-    labels->SetName("labels");
-    labels->SetNumberOfComponents(1);
-
-    for(unsigned int i = 0; i < _framePoints.size(); i++) {
-        glm::dvec3 pos = _framePoints[i]->pos;
-        glm::dvec3 rad = _framePoints[i]->radius;
-        glm::dvec3 rot = _framePoints[i]->orientation;
-        double color   = _framePoints[i]->color;
-        labels->InsertNextValue(_framePoints[i]->id + 1);
-
-        rad[0] /= 30;
-        rad[1] /= 30;
-        rad[2] /= 120;
-        points->InsertNextPoint(pos.x, pos.y, pos.z);
-        rot[2] = vtkMath::RadiansFromDegrees(rot[2]);
-
-        // scaling matrix
-        double sc[3][3] = {{rad[0], 0, 0}, {0, rad[1], 0}, {0, 0, rad[2]}};
-
-
-        // rotation matrix around x-axis
-        double roX[3][3] = {
-            {1, 0, 0}, {0, cos(rot[0]), -sin(rot[0])}, {0, sin(rot[0]), cos(rot[0])}};
-
-        // rotation matrix around y-axis
-        double roY[3][3] = {
-            {cos(rot[1]), 0, sin(rot[1])}, {0, 1, 0}, {-sin(rot[1]), 0, cos(rot[1])}};
-
-        // rotation matrix around z-axis
-        double roZ[3][3] = {
-            {cos(rot[2]), sin(rot[2]), 0.0}, {-sin(rot[2]), cos(rot[2]), 0.0}, {0.0, 0.0, 1.0}};
-
-
-        // final rotation matrix
-        double ro[3][3];
-        vtkMath::Multiply3x3(roX, roY, ro);
-        vtkMath::Multiply3x3(ro, roZ, ro);
-
-        // final transformation matrix
-        double rs[3][3];
-        vtkMath::Multiply3x3(sc, ro, rs);
-
-        tensors->InsertNextTuple9(
-            rs[0][0],
-            rs[0][1],
-            rs[0][2],
-            rs[1][0],
-            rs[1][1],
-            rs[1][2],
-            rs[2][0],
-            rs[2][1],
-            rs[2][2]);
-
-
-        if(color == -1) {
-            colors->InsertNextValue(NAN);
-        } else {
-            colors->InsertNextValue(color / 255.0);
-        }
-    }
-
-    // setting the colors
-    _polydata2D->SetPoints(points);
-    _polydata2D->GetPointData()->AddArray(colors);
-    _polydata2D->GetPointData()->SetActiveScalars("color");
-
-    // setting the scaling and rotation
-    _polydata2D->GetPointData()->SetTensors(tensors);
-    _polydata2D->GetPointData()->SetActiveTensors("tensors");
-
-    // setting the labels
-    _polydata2D->GetPointData()->AddArray(labels);
 }
 
 void Frame::ComputePolyData3D()
@@ -264,12 +176,6 @@ void Frame::ComputePolyData3D()
     // setting the scaling and rotation
     _polydata3D->GetPointData()->SetTensors(tensors);
     _polydata3D->GetPointData()->SetActiveTensors("tensors");
-}
-
-
-vtkPolyData * Frame::GetPolyData2D()
-{
-    return _polydata2D;
 }
 
 vtkPolyData * Frame::GetPolyData3D()

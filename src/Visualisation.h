@@ -32,6 +32,7 @@
  */
 #pragma once
 
+#include "AgentModel2D.h"
 #include "InteractorStyle.h"
 #include "Settings.h"
 #include "TrajectoryData.h"
@@ -228,5 +229,6 @@ private:
     vtkSmartPointer<vtkCallbackCommand> _timer_cb;
     int _timer_id = 1;
     std::unique_ptr<PointPlotter> _trail_plotter{nullptr};
+    std::unique_ptr<AgentModel2D> _agentModel2D{nullptr};
     bool is_pause{true};
 };

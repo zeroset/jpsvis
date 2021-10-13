@@ -33,6 +33,7 @@
 
 #include "Visualisation.h"
 
+#include "AgentModel2D.h"
 #include "Frame.h"
 #include "FrameElement.h"
 #include "InteractorStyle.h"
@@ -50,6 +51,7 @@
 #include <QObject>
 #include <QString>
 #include <QThread>
+#include <memory>
 #include <vtkActor.h>
 #include <vtkActor2DCollection.h>
 #include <vtkAssembly.h>
@@ -119,6 +121,9 @@ void Visualisation::start()
     // create the trails
     _trail_plotter = std::make_unique<PointPlotter>();
     _renderer->AddActor(_trail_plotter->getActor());
+
+    _agentModel2D = std::make_unique<AgentModel2D>(_trajectories);
+    _glyphs_pedestrians->SetInputData(_agentModel2D->polyData());
 
     // Create the render window
 
@@ -224,14 +229,15 @@ void Visualisation::stop()
         &MainWindow::slotUpdateNumFrames);
 
     _trail_plotter.reset();
+    _agentModel2D.reset();
     _renderWindow->GetInteractor()->DestroyTimer(_timer_id);
     _renderWindow->GetInteractor()->RemoveAllObservers();
 }
 
 void Visualisation::update()
 {
-    auto * polyData2D = _trajectories->currentFrame()->GetPolyData2D();
-    _glyphs_pedestrians->SetInputData(polyData2D);
+    _agentModel2D->updatePolyData();
+    auto polyData2D = _agentModel2D->polyData();
     _glyphs_pedestrians->Update();
     _pedestrians_labels->GetMapper()->SetInputDataObject(polyData2D);
     _pedestrians_labels->GetMapper()->Update();

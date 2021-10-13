@@ -67,17 +67,12 @@ public:
     /// return the 3D polydata set
     vtkPolyData * GetPolyData3D();
 
-    /// return the 2D polydata set
-    vtkPolyData * GetPolyData2D();
-
     /// return the pedestrians labels
     vtkPolyData * GetPolyDataLabels();
 
     const std::vector<FrameElement *> & GetFrameElements() const;
 
 private:
-    /// compute the 2D polydata
-    void ComputePolyData2D();
     /// compute the 3D polydata
     void ComputePolyData3D();
 

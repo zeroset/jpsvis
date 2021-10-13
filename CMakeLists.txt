@@ -115,6 +115,8 @@ add_executable(jpsvis MACOSX_BUNDLE WIN32
     forms/icons.qrc
     forms/jpsvis.rc
     forms/mainwindow.ui
+    src/AgentModel2D.cpp
+    src/AgentModel2D.h
     src/ApplicationState.h
     src/BuildInfo.cpp
     src/BuildInfo.h
