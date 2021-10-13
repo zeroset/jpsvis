@@ -37,6 +37,7 @@
 #include "FrameElement.h"
 #include "InteractorStyle.h"
 #include "Log.h"
+#include "MainWindow.h"
 #include "TrajectoryPoint.h"
 #include "general/Macros.h"
 #include "geometry/FacilityGeometry.h"
@@ -45,7 +46,6 @@
 #include "geometry/Point.h"
 #include "geometry/PointPlotter.h"
 
-#include <MainWindow.h>
 #include <QMessageBox>
 #include <QObject>
 #include <QString>
